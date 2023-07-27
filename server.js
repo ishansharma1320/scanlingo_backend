@@ -1,8 +1,15 @@
 const express = require('express');
 const routes = require("./server/routes");
-const {admin} = require("./firebase");
+const firebaseModule = require("./firebase");
+
+firebaseModule.initializeFirebase().catch((error) => {
+    console.error("Error initializing Firebase:", error);
+  });
+
+
 
 async function decodeIdToken(req,res,next){
+    const { admin } = firebaseModule;
     if(req.headers.authorization && req.headers.authorization.startsWith("Bearer ")){
         const idToken = req.headers.authorization.split("Bearer ")[1];
         try{

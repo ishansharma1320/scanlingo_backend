@@ -1,4 +1,4 @@
-const {db} = require("../../../../firebase");
+const { db } = require("../../../../firebase");
 const getUsersData = async (req,res)=>{
     let code = 200;
     let response = {status: false, response: null}
