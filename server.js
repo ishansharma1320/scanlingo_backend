@@ -1,6 +1,8 @@
 const express = require('express');
 const routes = require("./server/routes");
 const firebaseModule = require("./firebase");
+const bodyParser = require("body-parser");
+
 
 firebaseModule.initializeFirebase().catch((error) => {
     console.error("Error initializing Firebase:", error);
@@ -27,6 +29,7 @@ async function decodeIdToken(req,res,next){
 }
 
 const app = express();
+app.use(bodyParser.json());
 
 app.get("/",(req,res)=>{
     res.json({"success":true})

@@ -16,16 +16,34 @@ const client = new TextractClient({
   });
 
   
-(async function(){
-    const buffer = await readFileAsync("./sampleImage.jpg")
-    // Use the buffer as needed
-    const input = { // AnalyzeDocumentRequest
-        Document: { // Document
-          Bytes: buffer
-          },
-          FeatureTypes: ["FORMS"]
-      };
-      const command = new AnalyzeDocumentCommand(input);
-      const response = await client.send(command);
-      console.log(response);      
-})();
+// (async function(){
+//     const buffer = await readFileAsync("./sampleImage.jpg")
+//     // Use the buffer as needed
+//     const input = { // AnalyzeDocumentRequest
+//         Document: { // Document
+//           Bytes: buffer
+//           },
+//           FeatureTypes: ["FORMS"]
+//       };
+//       const command = new AnalyzeDocumentCommand(input);
+//       const response = await client.send(command);
+//       console.log(response);      
+// })();
+
+
+async function extractTextFromImage(filePath) {
+    const buffer = await readFileAsync(filePath)
+
+    const input = {
+        Document: {
+            Bytes: buffer
+        },
+        FeatureTypes: ["FORMS"]
+    };
+    const command = new AnalyzeDocumentCommand(input);
+    const response = await client.send(command);
+
+    return response;
+}
+
+module.exports = { extractTextFromImage };

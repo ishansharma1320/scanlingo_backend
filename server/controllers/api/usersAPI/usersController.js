@@ -19,6 +19,7 @@ const getUsersData = async (req,res)=>{
     } catch(err){
         console.error(err)
         response["error"] = err.message;
+        code = 500;
     }
     res.status(code).json(response)
 }
