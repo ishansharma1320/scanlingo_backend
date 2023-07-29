@@ -25,12 +25,10 @@ variables:
 
 build_and_push_docker_image:
   stage: build_and_push_docker_image
-  image: docker:latest
+  image: amazon/aws-cli:latest  # Use an image that includes the AWS CLI
   services:
     - name: docker:dind
       alias: docker
-    - name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
-      alias: aws
   script:
     - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
     - echo "Creating environment file..."
