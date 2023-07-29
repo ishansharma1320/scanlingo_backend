@@ -16,9 +16,9 @@ deploy_primary_template:
 
 build_and_push_docker_image:
   stage: build_and_push_docker_image
-  image: docker:stable
+  image: docker:20.10.16
   services:
-    - name: docker:dind
+    - name: registry.hub.docker.com/library/docker:20.10.16-dind
       alias: docker
   variables:
     # Environment variables for AWS credentials
