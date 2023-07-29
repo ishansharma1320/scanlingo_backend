@@ -1,5 +1,5 @@
 stages:
-  # - deploy_primary_template
+  - deploy_primary_template
   - build_and_push_docker_image
 
 deploy_primary_template:
