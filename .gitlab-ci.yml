@@ -22,6 +22,7 @@ build_and_push_docker_image:
   stage: build_and_push_docker_image
   services:
     - name: docker:20.10.16-dind
+    # registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
       alias: docker
   variables:
     # Environment variables for AWS credentials
@@ -30,6 +31,13 @@ build_and_push_docker_image:
     AWS_SESSION_TOKEN: $AWS_SESSION_TOKEN
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
     AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID
+    DOCKER_HOST: tcp://docker:2375/
+  # Environemt Variable for docker:dind service explaining to use overlay2 as supporting driver for docker
+  # https://docs.docker.com/storage/storagedriver/overlayfs-driver/
+    DOCKER_DRIVER: overlay2
+    # We need to disable TLS (https://about.gitlab.com/blog/2019/07/31/docker-in-docker-with-docker-19-dot-03/#disable-tls)
+    # to fix the error "docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?"
+    DOCKER_TLS_CERTDIR: ""
   script:
 
     - docker run --rm --entrypoint=sh -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"  -e "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" public.ecr.aws/aws-cli/aws-cli ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
