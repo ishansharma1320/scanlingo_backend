@@ -6,7 +6,7 @@ deploy_primary_template:
   stage: deploy_primary_template
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
-#     - aws cloudformation deploy --template-file cloud_formation/ScanLingoPrimaryStack.json --stack-name ScanLingoPrimaryStack --no-fail-on-empty-changeset
+    - aws cloudformation deploy --template-file cloud_formation/ScanLingoPrimaryStack.json --stack-name ScanLingoPrimaryStack --no-fail-on-empty-changeset
     - aws cloudformation describe-stacks --stack-name ScanLingoPrimaryStack --query "Stacks[0].Outputs" > stack-outputs.json
 #     # Extract the values from the outputs and set them as environment variables
   artifacts:
