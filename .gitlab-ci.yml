@@ -12,8 +12,7 @@ deploy_primary_template:
   artifacts:
     paths:
       - stack-outputs.json
-  rules:
-    - when: manual
+  
 
 build_and_push_docker_image:
   stage: build_and_push_docker_image
@@ -43,6 +42,4 @@ build_and_push_docker_image:
     - docker tag scanlingo-core-backend:$CI_COMMIT_SHA $ECR_REPO_URL:$CI_COMMIT_SHA
     - docker push $ECR_REPO_URL/scanlingo-core-backend:latest
     - docker push $ECR_REPO_URL/scanlingo-core-backend:$CI_COMMIT_SHA
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-      when: always
+  
