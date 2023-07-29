@@ -36,13 +36,6 @@
           "Fn::Sub": "${ECRRepo.RepositoryUri}"
         },
         "Description": "ECR Repository URL"
-      },
-    
-      "DockerImagePushCommand": {
-        "Value": {
-          "Fn::Sub": "docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
-        },
-        "Description": "Docker Image Push Command"
       }
     }
   }
