@@ -1,14 +1,14 @@
 stages:
-  - deploy_primary_template
+  # - deploy_primary_template
   - build_and_push_docker_image
 
 deploy_primary_template:
   stage: deploy_primary_template
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
-    - aws cloudformation deploy --template-file cloud_formation/ScanLingoPrimaryStack.json --stack-name ScanLingoPrimaryStack --no-fail-on-empty-changeset
+#     - aws cloudformation deploy --template-file cloud_formation/ScanLingoPrimaryStack.json --stack-name ScanLingoPrimaryStack --no-fail-on-empty-changeset
     - aws cloudformation describe-stacks --stack-name ScanLingoPrimaryStack --query "Stacks[0].Outputs" > stack-outputs.json
-    # Extract the values from the outputs and set them as environment variables
+#     # Extract the values from the outputs and set them as environment variables
   artifacts:
     paths:
       - stack-outputs.json
@@ -18,8 +18,11 @@ deploy_primary_template:
 
 
 build_and_push_docker_image:
+  image: docker:20.10.16
   stage: build_and_push_docker_image
-  image: ubuntu:latest
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
   variables:
     # Environment variables for AWS credentials
     AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
@@ -35,7 +38,6 @@ build_and_push_docker_image:
     - ./aws/install
     - which aws
     - aws --version
-    # -  docker run --rm -it amazon/aws-cli
     - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
     - echo "Creating environment file..."
     - ECR_REPO_URL=$(jq -r '.[] | select(.OutputKey=="ECRRepoURL") | .OutputValue' stack-outputs.json)
