@@ -29,12 +29,13 @@ build_and_push_docker_image:
     - echo "Creating environment file..."
     - ECR_REPO_URL=$(jq -r '.[] | select(.OutputKey=="ECRRepoURL") | .OutputValue' stack-outputs.json)
     - DOCKER_IMAGE_PUSH_COMMAND=$(jq -r '.[] | select(.OutputKey=="DockerImagePushCommand") | .OutputValue' stack-outputs.json)
+    - ECR_LOGIN_COMMAND=aws ecr get-login-password --region $AWS_DEFAULT_REGION
+    - eval $ECR_LOGIN_COMMAND | eval $DOCKER_IMAGE_PUSH_COMMAND
     # Create an environment file to store AWS credentials
     - echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> .env
     - echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> .env
     - echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> .env
     - echo "AWS_REGION=$AWS_DEFAULT_REGION" >> .env
-    - $DOCKER_IMAGE_PUSH_COMMAND
     - docker build -t scanlingo-core-backend:$CI_COMMIT_SHA -t scanlingo-core-backend:latest . --no-cache
     - docker tag scanlingo-core-backend:$CI_COMMIT_SHA $ECR_REPO_URL:latest
     - docker tag scanlingo-core-backend:$CI_COMMIT_SHA $ECR_REPO_URL:$CI_COMMIT_SHA

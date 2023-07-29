@@ -40,7 +40,7 @@
     
       "DockerImagePushCommand": {
         "Value": {
-          "Fn::Sub": "aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
+          "Fn::Sub": "docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
         },
         "Description": "Docker Image Push Command"
       }
