@@ -14,13 +14,7 @@ deploy_primary_template:
       - stack-outputs.json
   
 
-build_and_push_docker_image:
-  stage: build_and_push_docker_image
-  image: docker:20.10.16
-  services:
-    - name: registry.hub.docker.com/library/docker:20.10.16-dind
-      alias: docker
-  variables:
+variables:
     # Environment variables for AWS credentials
     AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
@@ -28,13 +22,17 @@ build_and_push_docker_image:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
     AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID
 
-  before_script:
-    - apk add --no-cache python3 py3-pip
-    - pip3 install --no-cache-dir awscliv2
-  
 
+build_and_push_docker_image:
+  stage: build_and_push_docker_image
+  image: docker:latest
+  services:
+    - name: docker-dind
+      alias: docker
+    - name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+      alias: awsBase
   script:
-    - awsv2 ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
     - echo "Creating environment file..."
     - ECR_REPO_URL=$(jq -r '.[] | select(.OutputKey=="ECRRepoURL") | .OutputValue' stack-outputs.json)
     # Create an environment file to store AWS credentials
