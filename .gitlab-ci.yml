@@ -44,5 +44,5 @@ build_and_push_docker_image:
     - docker push $ECR_REPO_URL/scanlingo-core-backend:latest
     - docker push $ECR_REPO_URL/scanlingo-core-backend:$CI_COMMIT_SHA
   rules:
-    - exists:
-        - $CI_COMMIT_SHA
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
