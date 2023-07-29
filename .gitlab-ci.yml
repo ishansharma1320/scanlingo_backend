@@ -28,6 +28,8 @@ build_and_push_docker_image:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
     - echo "Creating environment file..."
+    - sudo apt-get update
+    - sudo apt-get install jq
     - ECR_REPO_URL=$(jq -r '.[] | select(.OutputKey=="ECRRepoURL") | .OutputValue' stack-outputs.json)
     - DOCKER_IMAGE_PUSH_COMMAND=$(jq -r '.[] | select(.OutputKey=="DockerImagePushCommand") | .OutputValue' stack-outputs.json)
     # Create an environment file to store AWS credentials
@@ -42,6 +44,5 @@ build_and_push_docker_image:
     - docker push $ECR_REPO_URL/scanlingo-core-backend:latest
     - docker push $ECR_REPO_URL/scanlingo-core-backend:$CI_COMMIT_SHA
   rules:
-    - when: manual
     - exists:
         - $CI_COMMIT_SHA
