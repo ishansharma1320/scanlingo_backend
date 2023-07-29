@@ -32,7 +32,7 @@ build_and_push_docker_image:
     - apt-get update && apt-get install -y python3-pip unzip curl
     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip awscliv2.zip
-    - sudo ./aws/install
+    - ./aws/install
     - which aws
     - aws --version
     # -  docker run --rm -it amazon/aws-cli
