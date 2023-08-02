@@ -22,7 +22,7 @@ const {
 
 const getFirebaseServiceAccountJson = async ()=>{
     let response;
-    
+    console.log("getting secrets");
     try {
       response = await client.send(
         new GetSecretValueCommand({
@@ -37,10 +37,12 @@ const getFirebaseServiceAccountJson = async ()=>{
     }
     
     const secret = response.SecretString;
-  
+    // console.log(secret);
     let data = JSON.parse(secret);
     return JSON.parse(data['firebase-service-account']);
 }
 
-
+// (async function(){
+//   await getFirebaseServiceAccountJson();
+// })();
 module.exports = {getFirebaseServiceAccountJson}

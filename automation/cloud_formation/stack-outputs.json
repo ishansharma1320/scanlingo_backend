@@ -1,0 +1,16 @@
+[
+    {
+        "OutputKey": "BucketURI",
+        "OutputValue": "arn:aws:s3:::scanlingolambdabucket"
+    },
+    {
+        "OutputKey": "ECRRepoURL",
+        "OutputValue": "402777111624.dkr.ecr.us-east-1.amazonaws.com/scanlingo-artifacts",
+        "Description": "ECR Repository URL"
+    },
+    {
+        "OutputKey": "DockerImagePushCommand",
+        "OutputValue": "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 402777111624.dkr.ecr.us-east-1.amazonaws.com",
+        "Description": "Docker Image Push Command"
+    }
+]

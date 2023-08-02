@@ -4,43 +4,28 @@ const firebaseModule = require("./firebase");
 const bodyParser = require("body-parser");
 
 
-firebaseModule.initializeFirebase().catch((error) => {
-    console.error("Error initializing Firebase:", error);
-  });
 
-
-
-async function decodeIdToken(req,res,next){
-    const { admin } = firebaseModule;
-    if(req.headers.authorization && req.headers.authorization.startsWith("Bearer ")){
-        const idToken = req.headers.authorization.split("Bearer ")[1];
-        try{
-            const decodedToken = await admin.auth().verifyIdToken(idToken);
-            console.log(decodedToken)
-            req.currentUser = decodedToken;
-            next();
-        } catch(err){
-            console.log(err);
-            res.status(403).json({ error: "Error verifying ID Token" });
-        }
-    } else {
-        res.status(403).json({ error: "Authorization token missing" });
-    }
+async function initializeApp(){
+    let {db, admin} = await firebaseModule.initializeFirebase();
+    const app = express();
+    app.use(bodyParser.json({ limit: '10mb' }));
+    
+    app.get("/",(req,res)=>{
+        console.log({event: "/health route accessed"})
+        res.json({"success":true})
+    })
+    
+    const router = express.Router();
+    routes.register(router,db,admin);
+    
+    app.use("/api",router);
+    
+    
+    app.listen(3000, "0.0.0.0", ()=>{
+        console.log("Running express app at port 3000");
+    })
 }
 
-const app = express();
-app.use(bodyParser.json());
 
-app.get("/",(req,res)=>{
-    res.json({"success":true})
-})
-
-const router = express.Router();
-routes.register(router);
-
-app.use("/api",decodeIdToken,router);
-
-
-app.listen(3000, "0.0.0.0", ()=>{
-    console.log("Running express app at port 3000");
-})
+initializeApp();
+  

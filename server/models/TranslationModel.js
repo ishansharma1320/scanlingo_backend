@@ -3,11 +3,12 @@ let tablename = "translations"
 // Define the schema for your data
 
 const translationObjectSchema = new dynamoose.Schema({
+    translation_id: String,
+    user_id: String,
     type: {
         type: String,
         enum: ["Image", "Text"],
     },
-    translation_id: String,
     created_at: Date,
     image: {
         type: Object,
@@ -16,7 +17,8 @@ const translationObjectSchema = new dynamoose.Schema({
             image_thumbnail: {
                 type: Array,
                 schema: [{
-                    type: Object, schema: {
+                    type: Object,
+                    schema: {
                         size: Number, url: String
                     }
                 }]
@@ -52,6 +54,7 @@ const translationObjectSchema = new dynamoose.Schema({
 
 });
 
+// console.log(translationObjectSchema.hashKey);
 // Create a DynamoDB model using the schema
 const Translation = dynamoose.model(tablename, translationObjectSchema);
 

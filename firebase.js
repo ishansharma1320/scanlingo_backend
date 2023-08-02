@@ -3,24 +3,33 @@ const { getFirebaseServiceAccountJson } = require("./awsSecrets");
 const { getFirestore } = require('firebase-admin/firestore');
 
 let isInitialized = false;
-let db;
+
 
 async function initializeFirebase() {
+  
+  console.log("Initialising firebase");
   if (!isInitialized) {
     isInitialized = true; 
-
-    let serviceAccountJson = await getFirebaseServiceAccountJson();
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccountJson),
-      });
+    
+    try {
+      let serviceAccountJson = await getFirebaseServiceAccountJson();
+      if (!admin.apps.length) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccountJson),
+        });
+      }
+      
+      // console.log(db);
+    } catch (error) {
+      console.error("Error initializing Firebase:", error);
+      // Handle the error as needed
     }
-    db = getFirestore();
   }
+
+  let db = getFirestore();
+  
+  return {db, admin};
 }
 
-initializeFirebase().catch((error) => {
-  console.error("Error initializing Firebase:", error);
-});
+module.exports = {initializeFirebase};
 
-module.exports = { initializeFirebase, admin, db };

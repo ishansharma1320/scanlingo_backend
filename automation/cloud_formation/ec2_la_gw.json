@@ -1,0 +1,159 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "EC2 Instance with Docker Container, API Gateway, and Lambda Authorizer",
+
+  "Resources": {
+    "EC2InstanceSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable HTTP access",
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22
+          }
+        ]
+      }
+    },
+    "YourInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": ["LabRole"]
+      }
+    },
+    "EC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-0964d1dc1edd4bd2f", 
+        "InstanceType": "t4g.small",
+        "KeyName": "csci5409-a2-keypair",
+        "SecurityGroups": [{ "Ref": "EC2InstanceSecurityGroup" }],
+        "IamInstanceProfile": { "Ref": "YourInstanceProfile" },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "yum update -y\n",
+                "yum install -y docker\n",
+                "service docker start\n",
+                "usermod -a -G docker ec2-user\n",
+                "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com",
+                "docker run -d -p 3000:80 ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/scanlingo-artifacts:latest"
+              ]
+            ]
+          }
+        }
+      }
+    },
+
+    "LambdaAuthorizer": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "firebase-auth-cf",
+        "Handler": "index.handler",
+        "Runtime": "nodejs18.x",
+        "Code": {
+          "S3Bucket": "scanlingolambdabucket",
+          "S3Key": "firebase-authorizer.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_API_GW": "arn:aws:execute-api:us-east-1:402777111624:${APIGateway}/dev/*/app/*"
+          }
+        },
+        "Layers": [
+          "arn:aws:lambda:us-east-1:177933569100:layer:AWS-Parameters-and-Secrets-Lambda-Extension:4"
+        ],
+        "Role": "arn:aws:iam::402777111624:role/LabRole"
+      }
+    },
+
+    "LambdaAuthorizerApiGateway": {
+      "Type": "AWS::ApiGateway::Authorizer",
+      "Properties": {
+        "Name": "MyLambdaAuthorizer",
+        "RestApiId": { "Ref": "APIGateway" },
+        "Type": "TOKEN",
+        "AuthorizerUri": {
+          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaAuthorizer.Arn}/invocations"
+        },
+        "IdentitySource": "method.request.header.authorizationToken",
+        "AuthorizerCredentials": "arn:aws:iam::402777111624:role/LabRole",
+        "AuthorizerResultTtlInSeconds": 0
+      }
+    },
+
+    "APIGateway": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "MyApiGateway"
+      }
+    },
+
+    "ApiGatewayResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": { "Ref": "APIGateway" },
+        "ParentId": { "Fn::GetAtt": ["APIGateway", "RootResourceId"] },
+        "PathPart": "app"
+      }
+    },
+
+    "ProtectedApiGatewayResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": { "Ref": "APIGateway" },
+        "ParentId": { "Ref": "ApiGatewayResource" },
+        "PathPart": "protected"
+      }
+    },
+
+    "ApiGatewayMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "RestApiId": { "Ref": "APIGateway" },
+        "ResourceId": { "Ref": "ProtectedApiGatewayResource" },
+        "HttpMethod": "GET",
+        "AuthorizationType": "CUSTOM",
+        "AuthorizerId": { "Ref": "LambdaAuthorizerApiGateway" },
+        "Integration": {
+          "Type": "HTTP",
+          "IntegrationHttpMethod": "GET",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "http://",
+                { "Fn::GetAtt": ["EC2Instance", "PublicIp"] },
+                ":80"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+    "PublicIP": {
+      "Description": "Public IP address of the EC2 instance",
+      "Value": { "Fn::GetAtt": ["EC2Instance", "PublicIp"] }
+    },
+    "APIGatewayURL": {
+      "Description": "URL of the API Gateway",
+      "Value": {
+        "Fn::Sub": "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/dev"
+      }
+    }
+  }
+}

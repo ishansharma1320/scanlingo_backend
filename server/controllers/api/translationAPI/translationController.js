@@ -4,9 +4,17 @@ const { v4: uuidv4 } = require('uuid');
 
 
 
-const translateTextAPI = async (req,res)=>{
+const translateTextAPI = async (req, res, db,admin)=>{
     let code = 200;
     let response = {status: false, response: null}
+    let decodedTokenData; 
+    if(req.headers["x-firebase-decoded-token"]){
+        decodedTokenData = JSON.parse(req.headers["x-firebase-decoded-token"]).decodedToken;
+    } else {
+        let authorizationToken = req.headers.authorizationtoken;
+        console.log(authorizationToken);
+        decodedTokenData = await admin.auth().verifyIdToken(authorizationToken); 
+    }
 
     let { sourceText, targetLanguage } = req.body;
 
@@ -17,7 +25,7 @@ const translateTextAPI = async (req,res)=>{
             let translatedData = translation.data.translations[0];
             let translationObject = {text: {source: { utterance: sourceText, lang: translatedData.detectedSourceLanguage}, translated: {utterance: translatedData.translatedText, lang: targetLanguage}}};
             const uniqueId = uuidv4();
-            const newTranslation = new Translation({type: "Text", translation_id: uniqueId, created_at: new Date(), ...translationObject});
+            const newTranslation = new Translation({type: "Text", translation_id: uniqueId, user_id: decodedTokenData.uid || '', created_at: new Date(), ...translationObject});
             await newTranslation.save();
             console.log(newTranslation.translation_id);
             console.log('New user created:', newTranslation);
@@ -36,7 +44,7 @@ const translateTextAPI = async (req,res)=>{
 }
 
 
-const getSupportedLanguages = async (req, res) =>{
+const getSupportedLanguages = async (req, res, db,admin) =>{
     let code = 200;
     let response = {status: false, response: null}
     
